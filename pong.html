@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 48px;
+            color: #00bcd4;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+        #gameCanvas {
+            border: 4px solid #00bcd4;
+            border-radius: 10px;
+            background: #1a1a2e;
+        }
+        .btn-start {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>🏓 Pong</h1>
+        <div class="stats">
+            <div>Шумо: <span id="playerScore">0</span></div>
+            <div>Рақиб: <span id="aiScore">0</span></div>
+        </div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <button class="btn-start" onclick="startGame()">
+            <i class="fas fa-play"></i>
+            Оғоз
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const playerScoreElement = document.getElementById('playerScore');
+        const aiScoreElement = document.getElementById('aiScore');
+
+        const paddleWidth = 10;
+        const paddleHeight = 100;
+        let player = {x: 0, y: 150, score: 0};
+        let ai = {x: canvas.width - paddleWidth, y: 150, score: 0};
+        let ball = {x: 300, y: 200, dx: 5, dy: 5, size: 10};
+        let gameRunning = false;
+
+        function draw() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.setLineDash([10, 10]);
+            ctx.strokeStyle = '#555';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(canvas.width / 2, canvas.height);
+            ctx.stroke();
+
+            ctx.fillStyle = '#00bcd4';
+            ctx.fillRect(player.x, player.y, paddleWidth, paddleHeight);
+
+            ctx.fillStyle = '#ff5722';
+            ctx.fillRect(ai.x, ai.y, paddleWidth, paddleHeight);
+
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(ball.x, ball.y, ball.size, ball.size);
+
+            ctx.fillStyle = '#fff';
+            ctx.font = '30px Arial';
+            ctx.fillText(player.score, canvas.width / 4, 50);
+            ctx.fillText(ai.score, 3 * canvas.width / 4, 50);
+        }
+
+        function move() {
+            if (!gameRunning) return;
+
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.y + ball.size > canvas.height || ball.y < 0) {
+                ball.dy = -ball.dy;
+            }
+
+            if (ball.x < paddleWidth && ball.y > player.y && ball.y < player.y + paddleHeight) {
+                ball.dx = -ball.dx;
+                ball.dx *= 1.1;
+            }
+
+            if (ball.x > canvas.width - paddleWidth - ball.size && ball.y > ai.y && ball.y < ai.y + paddleHeight) {
+                ball.dx = -ball.dx;
+                ball.dx *= 1.1;
+            }
+
+            if (ball.x < 0) {
+                ai.score++;
+                aiScoreElement.textContent = ai.score;
+                resetBall();
+            }
+
+            if (ball.x > canvas.width) {
+                player.score++;
+                playerScoreElement.textContent = player.score;
+                resetBall();
+            }
+
+            if (ai.y + paddleHeight / 2 < ball.y) {
+                ai.y += 4;
+            } else {
+                ai.y -= 4;
+            }
+
+            draw();
+            requestAnimationFrame(move);
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = -ball.dx;
+            ball.dy = 5;
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            player.y = e.clientY - rect.top - paddleHeight / 2;
+        });
+
+        function startGame() {
+            if (gameRunning) return;
+            player.score = 0;
+            ai.score = 0;
+            playerScoreElement.textContent = 0;
+            aiScoreElement.textContent = 0;
+            resetBall();
+            gameRunning = true;
+            move();
+        }
+
+        draw();
+    </script>
+</body>
+</html>

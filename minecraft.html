@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft 2D - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #27ae60;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .inventory {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .block-btn {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #555;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-size: 24px;
+        }
+
+        .block-btn.selected {
+            border-color: #27ae60;
+            transform: scale(1.1);
+        }
+
+        .block-btn.grass { background: #27ae60; }
+        .block-btn.dirt { background: #8B4513; }
+        .block-btn.stone { background: #7f8c8d; }
+        .block-btn.wood { background: #A0522D; }
+        .block-btn.leaf { background: #228B22; }
+        .block-btn.sand { background: #F4A460; }
+
+        #gameCanvas {
+            border: 4px solid #27ae60;
+            border-radius: 10px;
+            background: #87CEEB;
+        }
+
+        .instructions {
+            margin-top: 20px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>🟩 Minecraft 2D</h1>
+        
+        <div class="inventory">
+            <button class="block-btn grass selected" onclick="selectBlock('grass')">🟩</button>
+            <button class="block-btn dirt" onclick="selectBlock('dirt')">🟫</button>
+            <button class="block-btn stone" onclick="selectBlock('stone')">⬜</button>
+            <button class="block-btn wood" onclick="selectBlock('wood')">🟫</button>
+            <button class="block-btn leaf" onclick="selectBlock('leaf')">🌿</button>
+            <button class="block-btn sand" onclick="selectBlock('sand')">🟨</button>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+        <p class="instructions">
+            Тугмаи чапи муш: гузоштани блок | Тугмаи рост: нест кардан
+        </p>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const blockSize = 40;
+        const cols = Math.floor(canvas.width / blockSize);
+        const rows = Math.floor(canvas.height / blockSize);
+
+        let selectedBlock = 'grass';
+        let world = [];
+
+        const blockColors = {
+            grass: '#27ae60',
+            dirt: '#8B4513',
+            stone: '#7f8c8d',
+            wood: '#A0522D',
+            leaf: '#228B22',
+            sand: '#F4A460'
+        };
+
+        function initWorld() {
+            for (let row = 0; row < rows; row++) {
+                world[row] = [];
+                for (let col = 0; col < cols; col++) {
+                    if (row > rows - 3) {
+                        world[row][col] = 'stone';
+                    } else if (row > rows - 5) {
+                        world[row][col] = 'dirt';
+                    } else {
+                        world[row][col] = null;
+                    }
+                }
+            }
+        }
+
+        function drawWorld() {
+            ctx.fillStyle = '#87CEEB';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    if (world[row][col]) {
+                        ctx.fillStyle = blockColors[world[row][col]];
+                        ctx.fillRect(col * blockSize, row * blockSize, blockSize - 1, blockSize - 1);
+                    }
+                }
+            }
+        }
+
+        function selectBlock(block) {
+            selectedBlock = block;
+            document.querySelectorAll('.block-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const col = Math.floor(x / blockSize);
+            const row = Math.floor(y / blockSize);
+
+            if (e.button === 0) {
+                world[row][col] = selectedBlock;
+            } else if (e.button === 2) {
+                world[row][col] = null;
+            }
+
+            drawWorld();
+        });
+
+        canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        initWorld();
+        drawWorld();
+    </script>
+</body>
+</html>

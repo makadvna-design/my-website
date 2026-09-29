@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Racing - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #f39c12;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        #gameCanvas {
+            border: 4px solid #f39c12;
+            border-radius: 10px;
+            background: #1a1a2e;
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn-control {
+            padding: 15px 30px;
+            background: #f39c12;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-control:hover {
+            background: #e67e22;
+            transform: scale(1.1);
+        }
+
+        .btn-start {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>🏎️ Racing</h1>
+        <div class="stats">
+            <div>Хол: <span id="score">0</span></div>
+            <div>Суръат: <span id="speed">0</span> км/соат</div>
+        </div>
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
+        
+        <div class="controls">
+            <button class="btn-control" onclick="moveLeft()">⬅️</button>
+            <button class="btn-control" onclick="moveRight()">➡️</button>
+        </div>
+
+        <button class="btn-start" onclick="startGame()">
+            <i class="fas fa-play"></i>
+            Оғоз
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const speedElement = document.getElementById('speed');
+
+        let carX = 175;
+        let obstacles = [];
+        let score = 0;
+        let speed = 5;
+        let gameRunning = false;
+        let animationId;
+
+        function drawGame() {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#555';
+            ctx.fillRect(50, 0, 300, canvas.height);
+
+            ctx.setLineDash([20, 20]);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(200, 0);
+            ctx.lineTo(200, canvas.height);
+            ctx.stroke();
+
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(carX, 420, 50, 80);
+
+            obstacles.forEach(obs => {
+                ctx.fillStyle = '#3498db';
+                ctx.fillRect(obs.x, obs.y, 50, 80);
+            });
+
+            if (gameRunning) {
+                updateGame();
+                animationId = requestAnimationFrame(drawGame);
+            }
+        }
+
+        function updateGame() {
+            score++;
+            scoreElement.textContent = score;
+            speedElement.textContent = speed * 20;
+
+            if (Math.random() < 0.02) {
+                obstacles.push({x: Math.random() * 250 + 50, y: -80});
+            }
+
+            obstacles.forEach((obs, index) => {
+                obs.y += speed;
+
+                if (obs.y > canvas.height) {
+                    obstacles.splice(index, 1);
+                }
+
+                if (
+                    carX < obs.x + 50 &&
+                    carX + 50 > obs.x &&
+                    420 < obs.y + 80 &&
+                    420 + 80 > obs.y
+                ) {
+                    gameOver();
+                }
+            });
+
+            if (score % 500 === 0) {
+                speed += 1;
+            }
+        }
+
+        function moveLeft() {
+            if (carX > 50) carX -= 30;
+        }
+
+        function moveRight() {
+            if (carX < 300) carX += 30;
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            
+            carX = 175;
+            obstacles = [];
+            score = 0;
+            speed = 5;
+            gameRunning = true;
+            drawGame();
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            alert(`Бозӣ тамом шуд! Холи шумо: ${score}`);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveLeft();
+            if (e.key === 'ArrowRight') moveRight();
+        });
+
+        drawGame();
+    </script>
+</body>
+</html>

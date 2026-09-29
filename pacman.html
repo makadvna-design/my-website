@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pac-Man - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #ffeb3b;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .stats {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 20px;
+        }
+
+        #gameCanvas {
+            border: 4px solid #ffeb3b;
+            border-radius: 10px;
+            background: #000;
+        }
+
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn-control {
+            width: 60px;
+            height: 60px;
+            background: #ffeb3b;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-control:hover {
+            background: #fdd835;
+            transform: scale(1.1);
+        }
+
+        .btn-start {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>🟡 Pac-Man</h1>
+        <div class="stats">
+            <div>Хол: <span id="score">0</span></div>
+            <div>Ҷон: <span id="lives">3</span></div>
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <div class="controls">
+            <button class="btn-control" onclick="changeDirection('up')">⬆️</button>
+        </div>
+        <div class="controls">
+            <button class="btn-control" onclick="changeDirection('left')">⬅️</button>
+            <button class="btn-control" onclick="changeDirection('down')">⬇️</button>
+            <button class="btn-control" onclick="changeDirection('right')">➡️</button>
+        </div>
+
+        <button class="btn-start" onclick="startGame()">
+            <i class="fas fa-play"></i>
+            Оғоз
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+
+        const tileSize = 20;
+        const cols = 20;
+        const rows = 20;
+
+        let pacman = {x: 1, y: 1, dx: 0, dy: 0};
+        let dots = [];
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,0,1],
+            [1,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1],
+            [1,1,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1],
+            [1,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+            [1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1],
+            [1,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
+            [1,1,0,1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,1,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1],
+            [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        function initDots() {
+            dots = [];
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    if (maze[row][col] === 0) {
+                        dots.push({x: col, y: row});
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#2196f3';
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    if (maze[row][col] === 1) {
+                        ctx.fillRect(col * tileSize, row * tileSize, tileSize - 1, tileSize - 1);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#ffeb3b';
+            dots.forEach(dot => {
+                ctx.beginPath();
+                ctx.arc(dot.x * tileSize + tileSize/2, dot.y * tileSize + tileSize/2, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.fillStyle = '#ffeb3b';
+            ctx.beginPath();
+            ctx.arc(pacman.x * tileSize + tileSize/2, pacman.y * tileSize + tileSize/2, tileSize/2 - 2, 0.2 * Math.PI, 1.8 * Math.PI);
+            ctx.lineTo(pacman.x * tileSize + tileSize/2, pacman.y * tileSize + tileSize/2);
+            ctx.fill();
+        }
+
+        function move() {
+            if (!gameRunning) return;
+
+            const newX = pacman.x + pacman.dx;
+            const newY = pacman.y + pacman.dy;
+
+            if (maze[newY] && maze[newY][newX] !== 1) {
+                pacman.x = newX;
+                pacman.y = newY;
+            }
+
+            dots = dots.filter(dot => {
+                if (dot.x === pacman.x && dot.y === pacman.y) {
+                    score += 10;
+                    scoreElement.textContent = score;
+                    return false;
+                }
+                return true;
+            });
+
+            if (dots.length === 0) {
+                gameRunning = false;
+                alert(`Ғолиб! Хол: ${score}`);
+            }
+
+            draw();
+            setTimeout(move, 150);
+        }
+
+        function changeDirection(dir) {
+            if (!gameRunning) return;
+            
+            switch(dir) {
+                case 'up': pacman.dx = 0; pacman.dy = -1; break;
+                case 'down': pacman.dx = 0; pacman.dy = 1; break;
+                case 'left': pacman.dx = -1; pacman.dy = 0; break;
+                case 'right': pacman.dx = 1; pacman.dy = 0; break;
+            }
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            
+            pacman = {x: 1, y: 1, dx: 0, dy: 0};
+            score = 0;
+            lives = 3;
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            initDots();
+            gameRunning = true;
+            move();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowUp': changeDirection('up'); break;
+                case 'ArrowDown': changeDirection('down'); break;
+                case 'ArrowLeft': changeDirection('left'); break;
+                case 'ArrowRight': changeDirection('right'); break;
+            }
+        });
+
+        initDots();
+        draw();
+    </script>
+</body>
+</html>

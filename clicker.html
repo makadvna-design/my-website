@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .score-display {
+            font-size: 72px;
+            font-weight: 900;
+            color: #e74c3c;
+            margin-bottom: 40px;
+        }
+
+        .clicker-btn {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            border: none;
+            border-radius: 50%;
+            font-size: 80px;
+            cursor: pointer;
+            transition: 0.1s;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+        }
+
+        .clicker-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .clicker-btn:active {
+            transform: scale(0.95);
+        }
+
+        .upgrades {
+            margin-top: 50px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .upgrade-btn {
+            padding: 15px 30px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .upgrade-btn:hover {
+            background: #2980b9;
+            transform: scale(1.05);
+        }
+
+        .upgrade-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>👆 Clicker</h1>
+        <div class="score-display">
+            <span id="score">0</span>
+        </div>
+        <button class="clicker-btn" onclick="clickButton()">
+            👆
+        </button>
+
+        <div class="upgrades">
+            <button class="upgrade-btn" id="upgrade1" onclick="buyUpgrade(1)">
+                +1/клик (100 хол)
+            </button>
+            <button class="upgrade-btn" id="upgrade2" onclick="buyUpgrade(2)">
+                +5/клик (500 хол)
+            </button>
+            <button class="upgrade-btn" id="upgrade3" onclick="buyUpgrade(3)">
+                +10/клик (1000 хол)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let pointsPerClick = 1;
+
+        const scoreElement = document.getElementById('score');
+        const upgrade1Btn = document.getElementById('upgrade1');
+        const upgrade2Btn = document.getElementById('upgrade2');
+        const upgrade3Btn = document.getElementById('upgrade3');
+
+        function clickButton() {
+            score += pointsPerClick;
+            scoreElement.textContent = score;
+            updateButtons();
+        }
+
+        function buyUpgrade(level) {
+            const costs = {1: 100, 2: 500, 3: 1000};
+            const points = {1: 1, 2: 5, 3: 10};
+
+            if (score >= costs[level]) {
+                score -= costs[level];
+                pointsPerClick += points[level];
+                scoreElement.textContent = score;
+                updateButtons();
+            }
+        }
+
+        function updateButtons() {
+            upgrade1Btn.disabled = score < 100;
+            upgrade2Btn.disabled = score < 500;
+            upgrade3Btn.disabled = score < 1000;
+        }
+
+        updateButtons();
+    </script>
+</body>
+</html>

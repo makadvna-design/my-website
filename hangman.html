@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tj">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman - GameZone</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border-bottom: 2px solid #ff0055;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ff0055;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-back {
+            padding: 10px 20px;
+            background: #ff0055;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .game-container {
+            margin-top: 100px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 48px;
+            color: #9c27b0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        .word {
+            font-size: 36px;
+            margin: 30px 0;
+            letter-spacing: 10px;
+        }
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .key {
+            width: 40px;
+            height: 40px;
+            background: #9c27b0;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .key:hover:not(:disabled) {
+            background: #8e24aa;
+            transform: scale(1.1);
+        }
+        .key:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .btn-start {
+            margin-top: 30px;
+            padding: 15px 40px;
+            background: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .lives {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-gamepad"></i>
+            GameZone
+        </div>
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-arrow-left"></i>
+            Баргаштан
+        </a>
+    </header>
+
+    <div class="game-container">
+        <h1>❓ Hangman</h1>
+        <div class="lives">
+            Ҷон: <span id="lives">6</span>
+        </div>
+        <div class="word" id="word"></div>
+        <div class="keyboard" id="keyboard"></div>
+        <button class="btn-start" onclick="initGame()">
+            <i class="fas fa-redo"></i>
+            Аз нав
+        </button>
+    </div>
+
+    <script>
+        const wordElement = document.getElementById('word');
+        const keyboardElement = document.getElementById('keyboard');
+        const livesElement = document.getElementById('lives');
+
+        const words = ['БАРНОМА', 'КОМПЮТЕР', 'ИНТЕРНЕТ', 'ТЕЛЕФОН', 'МОШИН', 'Китоб', 'МАКТАБ', 'ДОНИШ'];
+        let selectedWord = '';
+        let guessed = [];
+        let lives = 6;
+
+        function initGame() {
+            selectedWord = words[Math.floor(Math.random() * words.length)];
+            guessed = Array(selectedWord.length).fill(false);
+            lives = 6;
+            livesElement.textContent = lives;
+            drawWord();
+            drawKeyboard();
+        }
+
+        function drawWord() {
+            wordElement.textContent = guessed.map((g, i) => g ? selectedWord[i] : '_').join(' ');
+            if (!guessed.includes(false)) {
+                alert('Табрик! Шумо ғолиб шудед!');
+                initGame();
+            }
+        }
+
+        function drawKeyboard() {
+            keyboardElement.innerHTML = '';
+            const alphabet = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЧШЪЭЮЯ';
+            for (let letter of alphabet) {
+                const key = document.createElement('button');
+                key.className = 'key';
+                key.textContent = letter;
+                key.addEventListener('click', () => handleGuess(letter, key));
+                keyboardElement.appendChild(key);
+            }
+        }
+
+        function handleGuess(letter, keyElement) {
+            keyElement.disabled = true;
+            if (selectedWord.includes(letter)) {
+                for (let i = 0; i < selectedWord.length; i++) {
+                    if (selectedWord[i] === letter) {
+                        guessed[i] = true;
+                    }
+                }
+                drawWord();
+            } else {
+                lives--;
+                livesElement.textContent = lives;
+                if (lives === 0) {
+                    alert(`Бозӣ тамом! Калима: ${selectedWord}`);
+                    initGame();
+                }
+            }
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
